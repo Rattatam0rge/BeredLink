@@ -21,14 +21,11 @@ Applikasjonen er utviklet med ASP.NET Core MVC (.NET 10), MariaDB og Docker Comp
 
 ### Første oppstart
 
-1. Klon repositoryet fra GitHub.
+1. Last ned prosjektet fra GitHub.
 2. Åpne prosjektmappen i terminalen.
 3. Kontroller at Docker Desktop kjører.
-4. Start applikasjonen med:
+4. Start applikasjonen med: docker compose up --build.
 
-```bash
-docker compose up --build
-```
 
 Docker bygger applikasjonen, starter databasen og starter webapplikasjonen.
 
