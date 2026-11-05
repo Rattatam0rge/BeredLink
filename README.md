@@ -1,20 +1,74 @@
-# FeedbackMap – Kriseberedskap, ressurs- og behovsportal
+# BeredLink – Kriseberedskap, ressurs- og behovsportal
 
-ASP.NET Core MVC (.NET 10) + MariaDB, kjørt med Docker Compose.
+BeredLink er en digital plattform for kriseberedskap, ressursoversikt og behovsmelding.
 
-## Kjøre
+Applikasjonen er utviklet med ASP.NET Core MVC (.NET 10), MariaDB og Docker Compose.
 
-1. `docker compose up --build` / Eller bare starte opp inne på docker
-2. Åpne http://localhost:8080
+## Teknologi
 
+- ASP.NET Core MVC (.NET 10)
+- MariaDB 11.4
+- Entity Framework Core
+- Docker og Docker Compose
+- xUnit for testing
 
-## Første gang start
-mkdir FeedbackMap
-cd FeedbackMap
+## Komme i gang
+
+### Forutsetninger
+
+- Docker Desktop
+- Git
+
+### Første oppstart
+
+1. Klon repositoryet fra GitHub.
+2. Åpne prosjektmappen i terminalen.
+3. Kontroller at Docker Desktop kjører.
+4. Start applikasjonen med:
+
+```bash
 docker compose up --build
+```
 
+Docker bygger applikasjonen, starter databasen og starter webapplikasjonen.
 
-## Starte Docker
-docker compose up --build
-ELLER
-Starte rett fra Docker om du har Containeren fra før
+### Åpne applikasjonen
+
+Når containerne kjører, åpne:
+
+http://localhost:8080
+
+### Stoppe applikasjonen
+
+Trykk `Ctrl + C` i terminalen, og kjør:
+
+```bash
+docker compose down
+```
+
+## Testing
+
+Testprosjektet ligger i mappen `FeedbackMap.Tests`.
+
+Testene kan kjøres fra terminalen med:
+
+```bash
+dotnet test FeedbackMap.Tests/FeedbackMap.Tests.csproj
+```
+
+## Prosjektstruktur
+
+- `Controllers/` – Applikasjonens kontrollere
+- `Data/` – Database og datatilgang
+- `Migrations/` – Databasemigreringer
+- `Models/` – Datamodeller
+- `Services/` – Applikasjonens tjenester
+- `Views/` – MVC-visninger
+- `wwwroot/` – CSS, JavaScript og bilder
+- `FeedbackMap.Tests/` – Automatiserte tester
+
+## Docker
+
+Prosjektet bruker Docker Compose til å starte webapplikasjonen og MariaDB.
+
+Database og opplastede filer lagres i Docker-volumer, slik at data kan bevares mellom containeroppstarter.
