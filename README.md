@@ -16,8 +16,8 @@ Applikasjonen er utviklet med ASP.NET Core MVC (.NET 10), MariaDB og Docker Comp
 
 ### Forutsetninger
 
-- Docker Desktop
-- Git
+- Docker Desktop (installert og kjørende)
+
 
 ### Første oppstart
 
