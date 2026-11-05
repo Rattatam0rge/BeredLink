@@ -1,0 +1,10 @@
+@model int
+<li class="nav-item">
+  <a class="nav-link" asp-controller="Notification" asp-action="Index">
+    Varsler
+    @if (Model > 0)
+    {
+      <span class="badge rounded-pill text-bg-danger ms-1" aria-label="@Model uleste varsler">@Model</span>
+    }
+  </a>
+</li>

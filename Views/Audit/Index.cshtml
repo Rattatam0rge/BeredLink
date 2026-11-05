@@ -1,0 +1,27 @@
+@using FeedbackMap.Models
+@using FeedbackMap.Services
+@model IReadOnlyList<AuditItem>
+@{
+    ViewData["Title"] = "Logg";
+}
+
+<h1 class="h3 mb-1">Aktivitetslogg</h1>
+<p class="text-body-secondary">De 200 siste hendelsene. Loggen kan ikke endres fra applikasjonen.</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle">
+    <thead><tr><th>Tidspunkt</th><th>Bruker</th><th>Hendelse</th><th>Objekt</th><th>Detaljer</th></tr></thead>
+    <tbody>
+    @foreach (var a in Model)
+    {
+      <tr>
+        <td class="text-nowrap">@Labels.Date(a.Timestamp.ToLocalTime())</td>
+        <td>@(a.User ?? "–")</td>
+        <td><code>@a.Action</code></td>
+        <td>@a.EntityType @a.EntityId</td>
+        <td>@a.Details</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>

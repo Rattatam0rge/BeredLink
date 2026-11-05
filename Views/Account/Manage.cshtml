@@ -1,0 +1,24 @@
+@using FeedbackMap.Models
+@model FeedbackMap.ViewModels.ManageViewModel
+@{
+    ViewData["Title"] = "Min side";
+}
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h3 mb-3">Min side</h1>
+    <dl class="row">
+      <dt class="col-sm-4">E-post</dt>
+      <dd class="col-sm-8">@Model.Email</dd>
+
+      <dt class="col-sm-4">Rolle</dt>
+      <dd class="col-sm-8">@string.Join(", ", Model.Roles.Select(Labels.Role))</dd>
+
+      @if (!string.IsNullOrEmpty(Model.Organisation))
+      {
+        <dt class="col-sm-4">Organisasjon</dt>
+        <dd class="col-sm-8">@Model.Organisation</dd>
+      }
+    </dl>
+  </div>
+</div>

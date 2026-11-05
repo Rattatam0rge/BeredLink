@@ -1,0 +1,54 @@
+@using FeedbackMap.Models
+@model FeedbackMap.ViewModels.ResourcePrintViewModel
+@{
+    ViewData["Title"] = "Ressursliste";
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<div class="print-sheet">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1">Ressursliste</h1>
+      <div class="text-body-secondary">
+        @if (Model.HasBounds)
+        {
+          <text>Region (kartutsnitt): @Model.MinLat.ToString("F3", inv)–@Model.MaxLat.ToString("F3", inv) N,
+          @Model.MinLng.ToString("F3", inv)–@Model.MaxLng.ToString("F3", inv) Ø</text>
+        }
+        else { <text>Hele landet</text> }
+        @if (!string.IsNullOrWhiteSpace(Model.Type)) { <text> · Type: @Model.Type</text> }
+        <br />Opprettet @Labels.Date(Model.GeneratedAt) · @Model.Items.Count ressurser
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-lg no-print" data-print>Skriv ut</button>
+  </div>
+
+  @if (Model.Items.Count == 0)
+  {
+    <div class="alert alert-info">Ingen tilgjengelige ressurser i dette området.</div>
+  }
+  else
+  {
+    <table class="table table-sm table-bordered align-middle">
+      <thead>
+        <tr><th>Type</th><th>Beskrivelse</th><th>Posisjon</th><th>Tilgjengelig</th><th>Leverandør</th><th>Kontakt</th></tr>
+      </thead>
+      <tbody>
+      @foreach (var r in Model.Items)
+      {
+        <tr>
+          <td><strong>@r.Type</strong></td>
+          <td>@r.Description</td>
+          <td>@r.Latitude.ToString("F4", inv), @r.Longitude.ToString("F4", inv)</td>
+          <td>
+            @Labels.Date(r.AvailableFrom)
+            @if (r.AvailableTo is not null) { <text> – @Labels.Date(r.AvailableTo.Value)</text> }
+          </td>
+          <td>@Labels.Provider(r.ProviderType)</td>
+          <td>@r.Phone<br />@r.Email</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  }
+</div>

@@ -1,0 +1,94 @@
+@using FeedbackMap.Models
+@model FeedbackMap.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Registrer bruker";
+}
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="text-center mb-3"><img src="~/img/logo-icon.png" alt="BeredLink" width="64" height="73" /></div>
+    <h1 class="h3 mb-3">Registrer bruker</h1>
+
+    <form asp-action="Register" method="post">
+      <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+      <fieldset class="mb-4">
+        <legend class="form-label fs-6">Jeg er</legend>
+        <div class="d-grid gap-2">
+          <input type="radio" class="btn-check" asp-for="Role" value="@Roles.ResourceProvider" id="role-provider" />
+          <label class="btn btn-outline-primary btn-lg text-start" for="role-provider">
+            <strong>Ressursleverandør</strong><br /><small>Jeg kan tilby utstyr, kjøretøy eller mannskap</small>
+          </label>
+
+          <input type="radio" class="btn-check" asp-for="Role" value="@Roles.PublicActor" id="role-public" />
+          <label class="btn btn-outline-primary btn-lg text-start" for="role-public">
+            <strong>Offentlig aktør</strong><br /><small>Kommune, politi, brann, helse, Sivilforsvaret, Heimevernet</small>
+          </label>
+        </div>
+        <span asp-validation-for="Role" class="text-danger"></span>
+      </fieldset>
+
+      <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control form-control-lg" autocomplete="username" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+      </div>
+
+      <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control form-control-lg" autocomplete="new-password" />
+        <div class="form-text">Minst 10 tegn, med store og små bokstaver og tall.</div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+      </div>
+
+      <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control form-control-lg" autocomplete="new-password" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+      </div>
+
+      <div id="public-fields">
+        <div class="mb-3">
+          <label asp-for="Organisation" class="form-label"></label>
+          <input asp-for="Organisation" class="form-control form-control-lg" placeholder="f.eks. Kristiansand kommune" />
+          <span asp-validation-for="Organisation" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+          <label asp-for="RoleTitle" class="form-label"></label>
+          <input asp-for="RoleTitle" class="form-control form-control-lg" />
+          <span asp-validation-for="RoleTitle" class="text-danger"></span>
+        </div>
+      </div>
+
+      <div id="provider-fields">
+        <div class="mb-3">
+          <label asp-for="ProviderType" class="form-label"></label>
+          <select asp-for="ProviderType" class="form-select form-select-lg">
+            <option value="">Velg type…</option>
+            <option value="PrivatePerson">Privatperson</option>
+            <option value="Farmer">Bonde</option>
+            <option value="Business">Bedrift</option>
+            <option value="Contractor">Entreprenør</option>
+            <option value="VoluntaryOrganisation">Frivillig organisasjon</option>
+            <option value="DroneOperator">Droneoperatør</option>
+          </select>
+          <span asp-validation-for="ProviderType" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+          <label asp-for="ContactPhone" class="form-label"></label>
+          <input asp-for="ContactPhone" class="form-control form-control-lg" autocomplete="tel" />
+          <span asp-validation-for="ContactPhone" class="text-danger"></span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-100">Opprett bruker</button>
+    </form>
+
+    <p class="mt-3">Har du allerede en bruker? <a asp-action="Login">Logg inn</a></p>
+  </div>
+</div>
+
+@section Scripts {
+  <partial name="_ValidationScriptsPartial" />
+  <script src="~/js/register-form.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,364 @@
+@using FeedbackMap.Models
+@{
+    var isMapUser = User.Identity?.IsAuthenticated == true;
+    var isPublic = User.IsInRole(Roles.PublicActor);
+    var isProvider = User.IsInRole(Roles.ResourceProvider);
+    ViewData["Title"] = isMapUser ? "Kart" : "Velkommen";
+    ViewData["FullScreen"] = isMapUser;
+    ViewData["ShowSearch"] = isMapUser;
+    ViewData["Landing"] = !isMapUser;
+}
+
+@if (!isMapUser)
+{
+    <div class="landing">
+      <div class="landing-bg" aria-hidden="true">
+        <div class="landing-blob landing-blob-1"></div>
+        <div class="landing-blob landing-blob-2"></div>
+        <svg class="landing-contours" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" fill="none">
+          <path d="M-50 640 C 150 560, 300 700, 520 620 S 900 520, 1250 640" />
+          <path d="M-50 590 C 170 510, 320 650, 540 570 S 900 470, 1250 590" />
+          <path d="M-50 540 C 190 460, 340 600, 560 520 S 900 420, 1250 540" />
+          <path d="M-50 220 C 200 160, 380 280, 600 200 S 980 120, 1250 220" />
+          <path d="M-50 170 C 220 110, 400 230, 620 150 S 980 70, 1250 170" />
+        </svg>
+        <svg class="landing-route" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none">
+          <path d="M12 22 Q 30 8 50 12 T 84 18 T 90 44 T 78 66 T 66 85 T 22 70 T 8 48 T 12 22" />
+        </svg>
+        <div class="landing-floats" id="landing-floats"></div>
+      </div>
+
+      <div class="landing-inner">
+        <img class="landing-logo" src="~/img/logo.png" width="564" height="517"
+             alt="BeredLink – ressurser, samarbeid, beredskap" />
+
+        <p class="landing-lead">
+          Én felles oversikt når det gjelder. Offentlige aktører melder behov, innbyggere og næringsliv melder hva de kan bidra med,
+          og alt samles på ett kart.
+        </p>
+
+        <div class="landing-cta">
+          <a class="btn-cta btn-cta-primary" asp-controller="Account" asp-action="Login">Logg inn</a>
+          <a class="btn-cta btn-cta-secondary" asp-controller="Account" asp-action="Register">Registrer deg</a>
+        </div>
+
+        <div class="landing-cards">
+          <article class="landing-card">
+            <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M11.5,1L2,6V8H21V6M16,10V17H19V10M2,22H21V19H2M10,10V17H13V10M4,10V17H7V10H4Z" fill="currentColor"/></svg>
+            <h2>Offentlig aktør</h2>
+            <p>Registrer behov, se ressurser i nærheten og tildel dem med ett trykk.</p>
+          </article>
+          <article class="landing-card">
+            <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8,2V4H10V9H8.5A2.5,2.5 0 0,0 6,11.5V12H4V10H2V17H4V15H6.34A5,5 0 0,0 7,16.9V17A5,5 0 0,0 12,22A5,5 0 0,0 17,17V16.9A5,5 0 0,0 17.66,15H19V17H22V12H19V15.42C18.41,14.74 17.5,14 16.26,13.64C16.71,13.22 17,12.64 17,12C17,10.9 16.1,10 15,10H12V4H16V2M12,18A1.5,1.5 0 0,1 13.5,19.5A1.5,1.5 0 0,1 12,21A1.5,1.5 0 0,1 10.5,19.5A1.5,1.5 0 0,1 12,18Z" fill="currentColor"/></svg>
+            <h2>Ressursleverandør</h2>
+            <p>Meld inn traktor, aggregat, båt eller mannskap, gjerne med bilde.</p>
+          </article>
+          <article class="landing-card">
+            <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12,2C8.13,2 5,5.13 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9C19,5.13 15.87,2 12,2M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z" fill="currentColor"/></svg>
+            <h2>Ett felles kart</h2>
+            <p>Filter, radius rundt et behov og søk på adresse, sted eller postnummer.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+}
+else
+{
+    <div class="map-wrap">
+      <div id="map" role="application" aria-label="Kart over behov og ressurser"></div>
+
+      @* ---------- Filter ---------- *@
+      <div class="map-ui map-ui-top-right">
+        <button type="button" id="filter-toggle" class="btn btn-light btn-lg shadow border border-dark border-2"
+                aria-expanded="false" aria-controls="filter-panel">Filter</button>
+        <div id="filter-panel" class="fm-box mt-2" hidden>
+          <div class="p-3">
+            <fieldset>
+              <legend class="fs-6 fw-semibold">Vis på kartet</legend>
+              @if (isPublic)
+              {
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="f-acute" checked />
+                  <label class="form-check-label" for="f-acute">Akutte behov</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="f-planned" checked />
+                  <label class="form-check-label" for="f-planned">Planlagte behov</label>
+                </div>
+              }
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="f-resource" checked />
+                <label class="form-check-label" for="f-resource">@(isPublic ? "Tilgjengelige ressurser" : "Mine ressurser")</label>
+              </div>
+              @if (isPublic)
+              {
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="f-actor" checked />
+                  <label class="form-check-label" for="f-actor">Offentlige aktører</label>
+                </div>
+              }
+            </fieldset>
+
+            <label for="f-type" class="form-label mt-3">Type</label>
+            <select id="f-type" class="form-select">
+              <option value="">Alle typer</option>
+            </select>
+
+            @if (isPublic)
+            {
+              <hr />
+              <button type="button" id="print-list" class="btn btn-outline-dark w-100">Skriv ut ressursliste for kartutsnittet</button>
+            }
+
+            <button type="button" id="f-reset" class="btn btn-link px-0 mt-2">Nullstill filter</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="map-status" class="map-ui map-ui-top-center badge text-bg-dark" role="status" aria-live="polite">Laster…</div>
+
+      @* ---------- Radius rundt et valgt behov ---------- *@
+      @if (isPublic)
+      {
+        <div id="focus-box" class="map-ui map-ui-bottom-center fm-box focus-box" hidden>
+          <div class="focus-head">
+            <div>
+              <div class="focus-kicker">Ressurser rundt behov</div>
+              <strong id="focus-title"></strong>
+            </div>
+            <button type="button" id="focus-close" class="btn-close" aria-label="Avslutt radiusfilter"></button>
+          </div>
+          <div class="focus-body">
+            <div id="focus-radii" class="focus-radii" role="group" aria-label="Velg radius"></div>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="focus-suitable" checked />
+              <label class="form-check-label" for="focus-suitable">Bare passende ressurstyper</label>
+            </div>
+            <div id="focus-count" class="focus-count" aria-live="polite"></div>
+            <a id="focus-open" class="btn btn-primary btn-sm w-100 mt-2" href="#">Åpne behov og tildel</a>
+          </div>
+        </div>
+      }
+
+      @* ---------- Tegnforklaring (åpen som standard, kan minimeres) ---------- *@
+      <section id="legend-box" class="map-ui map-ui-bottom-left fm-box legend-box" aria-label="Tegnforklaring"
+               data-kinds="@(isPublic ? "acute,planned,resource,actor" : "resource")">
+        <div class="legend-header">
+          <span class="fw-semibold legend-title">Tegnforklaring</span>
+          <button type="button" id="legend-toggle" class="legend-toggle" aria-expanded="true"
+                  aria-controls="legend" aria-label="Minimer tegnforklaring"></button>
+        </div>
+        <div id="legend" class="legend-body">
+          <div id="legend-kinds"></div>
+          <div id="legend-types-wrap" hidden>
+            <div class="legend-sub">Typer på kartet</div>
+            <div id="legend-types"></div>
+          </div>
+        </div>
+      </section>
+
+      @* ---------- Knapper ---------- *@
+      <div class="map-ui map-ui-bottom-right d-flex flex-column align-items-end gap-2">
+        @if (isPublic)
+        {
+            <button type="button" class="btn btn-actor shadow" data-open-panel="actor-panel">Organisasjonens posisjon</button>
+            <button type="button" class="btn btn-danger btn-lg shadow" data-open-panel="register-panel">+ Registrer behov</button>
+        }
+        else if (isProvider)
+        {
+            <button type="button" class="btn btn-success btn-lg shadow" data-open-panel="register-panel">+ Registrer ressurs</button>
+        }
+      </div>
+
+      @* ---------- Paneler (samme kart brukes til å velge sted) ---------- *@
+      @if (isPublic)
+      {
+        <section id="register-panel" class="map-ui reg-panel" hidden role="dialog" aria-labelledby="reg-title">
+          <div class="reg-header">
+            <h2 id="reg-title" class="h5 mb-0 reg-title">Registrer behov</h2>
+            <div class="reg-header-actions">
+              <button type="button" class="btn btn-outline-dark btn-sm reg-min" aria-expanded="true">Vis kart</button>
+              <button type="button" class="btn-close reg-close" aria-label="Lukk"></button>
+            </div>
+          </div>
+          <div class="reg-body">
+            <form asp-controller="Need" asp-action="Create" method="post">
+              <div class="alert alert-danger reg-general-error" role="alert" hidden></div>
+
+              <div class="mb-3">
+                <div class="fw-semibold mb-1">Prioritet</div>
+                <div class="d-flex gap-2">
+                  <input type="radio" class="btn-check" name="Priority" value="Acute" id="prio-acute" checked />
+                  <label class="btn btn-outline-danger flex-fill" for="prio-acute">Akutt</label>
+                  <input type="radio" class="btn-check" name="Priority" value="Planned" id="prio-planned" />
+                  <label class="btn btn-outline-warning text-dark flex-fill" for="prio-planned">Planlagt</label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-type" class="form-label fw-semibold">Type behov</label>
+                <select id="reg-type" name="Type" class="form-select" required>
+                  <option value="">Velg type…</option>
+                  @foreach (var t in Catalog.NeedTypes) { <option value="@t">@t</option> }
+                </select>
+                <div class="field-error" data-error-for="Type"></div>
+              </div>
+
+              <div class="mb-3">
+                <div class="fw-semibold mb-1">Sted</div>
+                <div class="reg-loc-text" aria-live="polite">Trykk på kartet for å velge sted</div>
+                <button type="button" class="btn btn-outline-dark btn-sm mt-2 reg-mylocation">Bruk min posisjon</button>
+                <input type="hidden" name="Latitude" />
+                <input type="hidden" name="Longitude" />
+                <div class="field-error" data-error-for="Latitude"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-deadline" class="form-label fw-semibold">Frist</label>
+                <input id="reg-deadline" name="Deadline" type="datetime-local" class="form-control" required />
+                <div class="field-error" data-error-for="Deadline"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-contact" class="form-label fw-semibold">Kontaktpunkt (navn og telefon)</label>
+                <input id="reg-contact" name="ContactPoint" class="form-control" maxlength="200" required autocomplete="off" />
+                <div class="field-error" data-error-for="ContactPoint"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-desc" class="form-label fw-semibold">Beskrivelse (valgfritt)</label>
+                <textarea id="reg-desc" name="Description" class="form-control" rows="3" maxlength="1000"></textarea>
+                <div class="field-error" data-error-for="Description"></div>
+              </div>
+
+              <button type="submit" class="btn btn-danger btn-lg w-100 reg-submit">Registrer behov</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="actor-panel" class="map-ui reg-panel" hidden role="dialog" aria-labelledby="actor-title">
+          <div class="reg-header">
+            <h2 id="actor-title" class="h5 mb-0 reg-title">Organisasjonens posisjon</h2>
+            <div class="reg-header-actions">
+              <button type="button" class="btn btn-outline-dark btn-sm reg-min" aria-expanded="true">Vis kart</button>
+              <button type="button" class="btn-close reg-close" aria-label="Lukk"></button>
+            </div>
+          </div>
+          <div class="reg-body">
+            <form asp-controller="Actor" asp-action="SetBase" method="post">
+              <div class="alert alert-danger reg-general-error" role="alert" hidden></div>
+              <p>Marker hvor organisasjonen din holder til (stasjon, base eller kommunehus). Posisjonen vises som blå markør for andre offentlige aktører.</p>
+
+              <div class="mb-3">
+                <div class="fw-semibold mb-1">Sted</div>
+                <div class="reg-loc-text" aria-live="polite">Trykk på kartet for å velge sted</div>
+                <button type="button" class="btn btn-outline-dark btn-sm mt-2 reg-mylocation">Bruk min posisjon</button>
+                <input type="hidden" name="Latitude" />
+                <input type="hidden" name="Longitude" />
+                <div class="field-error" data-error-for="Latitude"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="actor-label" class="form-label fw-semibold">Navn på enhet (valgfritt)</label>
+                <input id="actor-label" name="Label" class="form-control" maxlength="100" placeholder="f.eks. Brannstasjon Grim" autocomplete="off" />
+                <div class="field-error" data-error-for="Label"></div>
+              </div>
+
+              <button type="submit" class="btn btn-actor btn-lg w-100 reg-submit">Lagre posisjon</button>
+            </form>
+          </div>
+        </section>
+      }
+      else if (isProvider)
+      {
+        <section id="register-panel" class="map-ui reg-panel" hidden role="dialog" aria-labelledby="reg-title"
+                 data-title-new="Registrer ressurs" data-title-edit="Endre ressurs"
+                 data-submit-new="Registrer ressurs" data-submit-edit="Lagre endringer">
+          <div class="reg-header">
+            <h2 id="reg-title" class="h5 mb-0 reg-title">Registrer ressurs</h2>
+            <div class="reg-header-actions">
+              <button type="button" class="btn btn-outline-dark btn-sm reg-min" aria-expanded="true">Vis kart</button>
+              <button type="button" class="btn-close reg-close" aria-label="Lukk"></button>
+            </div>
+          </div>
+          <div class="reg-body">
+            <form asp-controller="Resource" asp-action="Create" method="post" enctype="multipart/form-data"
+                  data-get-url="@Url.Action("GetForEdit", "Resource")" data-update-url="@Url.Action("Update", "Resource")">
+              <input type="hidden" name="RemoveImage" value="false" />
+              <div class="alert alert-danger reg-general-error" role="alert" hidden></div>
+
+              <div class="mb-3">
+                <label for="reg-type" class="form-label fw-semibold">Type ressurs</label>
+                <select id="reg-type" name="Type" class="form-select" required>
+                  <option value="">Velg type…</option>
+                  @foreach (var t in Catalog.ResourceTypes) { <option value="@t">@t</option> }
+                </select>
+                <div class="field-error" data-error-for="Type"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-image" class="form-label fw-semibold">Bilde av ressursen (valgfritt)</label>
+                <input id="reg-image" name="Image" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                <div class="form-text">Et bilde hjelper de som skal bruke ressursen. JPEG, PNG eller WebP, maks 5 MB.</div>
+                <div class="reg-image-wrap" hidden>
+                  <img class="reg-image-preview" alt="Forhåndsvisning av valgt bilde" />
+                  <button type="button" class="btn btn-outline-danger btn-sm reg-image-clear">Fjern bilde</button>
+                </div>
+                <div class="field-error" data-error-for="Image"></div>
+              </div>
+
+              <div class="mb-3">
+                <div class="fw-semibold mb-1">Sted</div>
+                <div class="reg-loc-text" aria-live="polite">Trykk på kartet for å velge sted</div>
+                <button type="button" class="btn btn-outline-dark btn-sm mt-2 reg-mylocation">Bruk min posisjon</button>
+                <input type="hidden" name="Latitude" />
+                <input type="hidden" name="Longitude" />
+                <div class="field-error" data-error-for="Latitude"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-from" class="form-label fw-semibold">Tilgjengelig fra</label>
+                <input id="reg-from" name="AvailableFrom" type="datetime-local" class="form-control" required />
+                <div class="field-error" data-error-for="AvailableFrom"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-to" class="form-label fw-semibold">Tilgjengelig til (valgfritt)</label>
+                <input id="reg-to" name="AvailableTo" type="datetime-local" class="form-control" />
+                <div class="field-error" data-error-for="AvailableTo"></div>
+              </div>
+
+              <div class="mb-3">
+                <label for="reg-desc" class="form-label fw-semibold">Beskrivelse (valgfritt)</label>
+                <textarea id="reg-desc" name="Description" class="form-control" rows="3" maxlength="1000"
+                          placeholder="f.eks. modell, kapasitet, om fører følger med"></textarea>
+                <div class="field-error" data-error-for="Description"></div>
+              </div>
+
+              <p class="small text-body-secondary">Kontaktinformasjonen din (telefon og e-post) hentes fra profilen din.</p>
+
+              <button type="submit" class="btn btn-success btn-lg w-100 reg-submit">Registrer ressurs</button>
+            </form>
+          </div>
+        </section>
+      }
+    </div>
+}
+
+@section Styles {
+  @if (isMapUser) { <partial name="_LeafletCss" /> }
+}
+@section Scripts {
+  @if (isMapUser)
+  {
+    <partial name="_LeafletJs" />
+    <script src="~/js/map.js" asp-append-version="true"></script>
+    <script src="~/js/map-search.js" asp-append-version="true"></script>
+    <script src="~/js/register-panel.js" asp-append-version="true"></script>
+  }
+  else
+  {
+    <script src="~/js/fm-common.js" asp-append-version="true"></script>
+    <script src="~/js/landing.js" asp-append-version="true"></script>
+  }
+}

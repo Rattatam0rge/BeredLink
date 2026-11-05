@@ -1,0 +1,48 @@
+@using FeedbackMap.Models
+@using FeedbackMap.Services
+@model IReadOnlyList<NotificationItem>
+@{
+    ViewData["Title"] = "Varsler";
+}
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-9">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h1 class="h3 mb-0">Varsler</h1>
+      @if (Model.Any(n => !n.IsRead))
+      {
+        <form asp-action="MarkAllRead" method="post">
+          <button type="submit" class="btn btn-outline-dark">Merk alle som lest</button>
+        </form>
+      }
+    </div>
+
+    @if (Model.Count == 0)
+    {
+      <div class="alert alert-info">Du har ingen varsler ennå. Du får beskjed her når en av ressursene dine blir tildelt et behov.</div>
+    }
+    else
+    {
+      <ul class="list-group">
+        @foreach (var n in Model)
+        {
+          <li class="list-group-item @(n.IsRead ? "" : "notification-unread")">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <div>
+                @if (!n.IsRead) { <span class="badge text-bg-danger me-2">Ny</span> }
+                @n.Message
+              </div>
+              <div class="text-body-secondary small">@Labels.Date(n.CreatedAt.ToLocalTime())</div>
+            </div>
+            @if (!n.IsRead)
+            {
+              <form asp-action="MarkRead" asp-route-id="@n.Id" method="post" class="mt-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Merk som lest</button>
+              </form>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

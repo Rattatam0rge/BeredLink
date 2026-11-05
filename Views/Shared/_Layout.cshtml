@@ -1,0 +1,105 @@
+@using FeedbackMap.Models
+@{
+    var fullscreen = (ViewData["FullScreen"] as bool?) == true;
+    var landing = (ViewData["Landing"] as bool?) == true;
+    var showSearch = (ViewData["ShowSearch"] as bool?) == true;
+    var loggedIn = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – BeredLink</title>
+    <link rel="icon" type="image/png" href="~/img/favicon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/FeedbackMap.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="@(fullscreen ? "app-fullscreen" : "") @(landing ? "landing-page" : "")">
+    <a class="visually-hidden-focusable" href="#main">Hopp til innhold</a>
+
+    <header class="@(fullscreen ? "fm-header-overlay" : "")">
+        <nav class="navbar navbar-expand-lg navbar-light fm-navbar">
+            <div class="container-fluid @(showSearch ? "fm-nav-grid" : "")">
+                <a class="navbar-brand fm-brand" asp-controller="Home" asp-action="Index" aria-label="BeredLink, til forsiden">
+                    <img src="~/img/logo-icon.png" alt="" class="fm-brand-icon" width="27" height="31" />
+                    <span class="fm-brand-text"><span class="fm-brand-bered">Bered</span><span class="fm-brand-link">Link</span></span>
+                </a>
+
+                @if (showSearch)
+                {
+                    <partial name="_MapSearch" />
+                }
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Åpne meny">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav @(showSearch ? "ms-auto" : "me-auto")">
+                        @if (loggedIn)
+                        {
+                            @* «Kart» vises bare på andre sider. På kartet er logoen veien hjem. *@
+                            @if (!fullscreen)
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Kart</a></li>
+                            }
+                            @if (User.IsInRole(Roles.PublicActor))
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="Need" asp-action="Index">Behov</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="Resource" asp-action="Index">Ressurser</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="Audit" asp-action="Index">Logg</a></li>
+                            }
+                            @if (User.IsInRole(Roles.ResourceProvider))
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-controller="Resource" asp-action="Index">Mine ressurser</a></li>
+                                @await Component.InvokeAsync("NotificationBadge")
+                            }
+                        }
+                    </ul>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="fm-alerts" aria-live="polite">
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success alert-dismissible shadow" role="status">
+                @ok
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Lukk"></button>
+            </div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger alert-dismissible shadow" role="alert">
+                @err
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Lukk"></button>
+            </div>
+        }
+    </div>
+
+    @if (fullscreen || landing)
+    {
+        <main id="main">
+            @RenderBody()
+        </main>
+    }
+    else
+    {
+        <div class="container py-4">
+            <main id="main">
+                @RenderBody()
+            </main>
+        </div>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/fm-ui.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

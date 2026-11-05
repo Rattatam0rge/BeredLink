@@ -1,0 +1,182 @@
+@using FeedbackMap.Models
+@using FeedbackMap.Services
+@using FeedbackMap.ViewModels
+@model NeedDetailsPageViewModel
+@{
+    var need = Model.Need;
+    ViewData["Title"] = "Behov: " + need.Type;
+    var lat = need.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var lng = need.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var resolved = need.Status == NeedStatus.Resolved;
+}
+
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-10">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+      <h1 class="h3 mb-0">@need.Type</h1>
+      <div>
+        <span class="badge fs-6 @Labels.PriorityBadge(need.Priority)">@Labels.Priority(need.Priority)</span>
+        <span class="badge fs-6 @Labels.StatusBadge(need.Status)">@Labels.Status(need.Status)</span>
+      </div>
+    </div>
+
+    <dl class="row">
+      <dt class="col-sm-3">Organisasjon</dt><dd class="col-sm-9">@need.Organisation</dd>
+      <dt class="col-sm-3">Frist</dt><dd class="col-sm-9">@Labels.Date(need.Deadline)</dd>
+      <dt class="col-sm-3">Kontaktpunkt</dt><dd class="col-sm-9">@need.ContactPoint</dd>
+      <dt class="col-sm-3">Posisjon</dt><dd class="col-sm-9">@lat, @lng</dd>
+      @if (!string.IsNullOrWhiteSpace(need.Description))
+      {
+        <dt class="col-sm-3">Beskrivelse</dt><dd class="col-sm-9">@need.Description</dd>
+      }
+      <dt class="col-sm-3">Registrert</dt><dd class="col-sm-9">@Labels.Date(need.CreatedAt.ToLocalTime())</dd>
+    </dl>
+
+    <a class="btn btn-outline-primary btn-lg mb-4" href="/?lat=@lat&lng=@lng&z=14">Vis på kartet</a>
+
+    @if (need.NextStatuses.Count > 0)
+    {
+      <h2 class="h5">Endre status</h2>
+      <div class="d-grid gap-2 d-sm-flex mb-4">
+        @foreach (var next in need.NextStatuses)
+        {
+          <form asp-action="ChangeStatus" asp-route-id="@need.Id" method="post" class="flex-fill">
+            <input type="hidden" name="status" value="@next" />
+            <button type="submit" class="btn btn-primary btn-lg w-100">Sett til «@Labels.Status(next)»</button>
+          </form>
+        }
+      </div>
+    }
+
+    @* ---------- Tildelte ressurser ---------- *@
+    <h2 class="h5">Tildelte ressurser</h2>
+    @if (Model.Assignments.Count == 0)
+    {
+      <p class="text-body-secondary">Ingen ressurser er tildelt dette behovet ennå.</p>
+    }
+    else
+    {
+      <div class="table-responsive mb-4">
+        <table class="table align-middle table-stack">
+          <thead><tr><th>Ressurs</th><th>Leverandør</th><th>Tildelt</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          @foreach (var a in Model.Assignments)
+          {
+            <tr>
+              <td data-label="Ressurs"><strong>@a.ResourceType</strong></td>
+              <td data-label="Leverandør">@a.Phone<br />@a.Email</td>
+              <td data-label="Tildelt">@Labels.Date(a.AssignedAt.ToLocalTime())</td>
+              <td data-label="Status">
+                <span class="badge @(a.IsActive ? "text-bg-success" : "text-bg-secondary")">@Labels.Match(a.Status)</span>
+              </td>
+              <td data-label="" class="text-end cell-actions">
+                @if (a.IsActive)
+                {
+                  <form asp-action="Unassign" asp-route-id="@need.Id" method="post" class="d-inline"
+                        data-confirm="Avbryte tildelingen? Leverandøren får beskjed.">
+                    <input type="hidden" name="assignmentId" value="@a.Id" />
+                    <input type="hidden" name="radius" value="@Model.Radius" />
+                    <input type="hidden" name="suitable" value="@Model.OnlySuitable.ToString().ToLower()" />
+                    <button type="submit" class="btn btn-outline-danger">Avbryt tildeling</button>
+                  </form>
+                }
+              </td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @* ---------- Ressurser i nærheten ---------- *@
+    @if (!resolved)
+    {
+      <h2 class="h5">Ressurser i nærheten</h2>
+
+      <form method="get" asp-action="Details" asp-route-id="@need.Id" class="nearby-filter mb-3">
+        <div class="btn-group flex-wrap" role="group" aria-label="Radius">
+          @foreach (var r in NeedDetailsPageViewModel.Radii)
+          {
+            <input type="radio" class="btn-check" name="radius" id="radius-@r" value="@r" checked="@(r == Model.Radius)" />
+            <label class="btn btn-outline-dark" for="radius-@r">@Labels.Distance(r)</label>
+          }
+        </div>
+        <div class="form-check form-check-inline ms-md-3">
+          <input class="form-check-input" type="checkbox" name="suitable" id="suitable" value="true" checked="@Model.OnlySuitable" />
+          <label class="form-check-label" for="suitable">Bare passende typer</label>
+        </div>
+        <input type="hidden" name="suitable" value="false" />
+        <button type="submit" class="btn btn-primary">Oppdater</button>
+      </form>
+
+      @if (Model.Nearby.Count == 0)
+      {
+        <div class="alert alert-info">
+          Ingen tilgjengelige ressurser innen @Labels.Distance(Model.Radius).
+          @if (Model.OnlySuitable) { <text>Prøv å fjerne «bare passende typer» eller øke radius.</text> }
+        </div>
+      }
+      else
+      {
+        <div class="table-responsive mb-4">
+          <table class="table table-hover align-middle table-stack">
+            <thead><tr><th>Bilde</th><th>Ressurs</th><th>Avstand</th><th>Leverandør</th><th>Tilgjengelig</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var n in Model.Nearby)
+            {
+              var r = n.Resource;
+              <tr>
+                <td data-label="Bilde">
+                  @if (r.HasImage)
+                  {
+                    <a href="/Media/ResourceImage/@r.Id" target="_blank" rel="noopener">
+                      <img class="res-thumb" src="/Media/ResourceImage/@r.Id" alt="Bilde av @r.Type" loading="lazy" />
+                    </a>
+                  }
+                  else { <span class="text-body-secondary">–</span> }
+                </td>
+                <td data-label="Ressurs">
+                  <strong>@r.Type</strong>
+                  @if (n.TypeMatches) { <span class="badge text-bg-success ms-1">Passer</span> }
+                  @if (!string.IsNullOrWhiteSpace(r.Description)) { <div class="small text-body-secondary">@r.Description</div> }
+                </td>
+                <td data-label="Avstand"><strong>@Labels.Distance(n.DistanceMeters)</strong></td>
+                <td data-label="Leverandør">@Labels.Provider(r.ProviderType)<br />@r.Phone<br />@r.Email</td>
+                <td data-label="Tilgjengelig">
+                  @Labels.Date(r.AvailableFrom)
+                  @if (r.AvailableTo is not null) { <text> – @Labels.Date(r.AvailableTo.Value)</text> }
+                </td>
+                <td data-label="" class="text-end cell-actions">
+                  <form asp-action="Assign" asp-route-id="@need.Id" method="post">
+                    <input type="hidden" name="resourceId" value="@r.Id" />
+                    <input type="hidden" name="radius" value="@Model.Radius" />
+                    <input type="hidden" name="suitable" value="@Model.OnlySuitable.ToString().ToLower()" />
+                    <button type="submit" class="btn btn-success">Tildel</button>
+                  </form>
+                </td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+    else
+    {
+      <div class="alert alert-secondary">Behovet er løst. Ressursene er frigjort.</div>
+    }
+
+    <h2 class="h5">Statushistorikk</h2>
+    <ul class="list-group mb-4">
+      @foreach (var h in need.History)
+      {
+        <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
+          <span><span class="badge @Labels.StatusBadge(h.Status)">@Labels.Status(h.Status)</span> av @h.ChangedBy</span>
+          <span class="text-body-secondary">@Labels.Date(h.ChangedAt.ToLocalTime())</span>
+        </li>
+      }
+    </ul>
+
+    <a asp-action="Index">← Tilbake til behov</a>
+  </div>
+</div>

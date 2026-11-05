@@ -1,0 +1,46 @@
+@using FeedbackMap.Models
+@using FeedbackMap.Services
+@model IReadOnlyList<NeedListItem>
+@{
+    ViewData["Title"] = "Behov";
+    var showResolved = (ViewData["ShowResolved"] as bool?) == true;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Behov</h1>
+  <a class="btn btn-danger btn-lg" href="/?register=1">+ Registrer behov</a>
+</div>
+
+<div class="mb-3">
+  <a asp-action="Index" asp-route-showResolved="@(!showResolved)" class="link-primary">
+    @(showResolved ? "Skjul løste behov" : "Vis også løste behov")
+  </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">Ingen behov er registrert ennå.</div>
+}
+else
+{
+    <div class="table-responsive">
+      <table class="table table-hover align-middle table-stack">
+        <thead>
+          <tr><th>Prioritet</th><th>Type</th><th>Organisasjon</th><th>Status</th><th>Frist</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var n in Model)
+        {
+          <tr>
+            <td data-label="Prioritet"><span class="badge @Labels.PriorityBadge(n.Priority)">@Labels.Priority(n.Priority)</span></td>
+            <td data-label="Type"><strong>@n.Type</strong></td>
+            <td data-label="Organisasjon">@n.Organisation</td>
+            <td data-label="Status"><span class="badge @Labels.StatusBadge(n.Status)">@Labels.Status(n.Status)</span></td>
+            <td data-label="Frist">@Labels.Date(n.Deadline)</td>
+            <td data-label="" class="text-end cell-actions"><a class="btn btn-outline-primary" asp-action="Details" asp-route-id="@n.Id">Åpne</a></td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+}
