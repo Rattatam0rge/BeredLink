@@ -69,3 +69,19 @@ dotnet test FeedbackMap.Tests/FeedbackMap.Tests.csproj
 Prosjektet bruker Docker Compose til å starte webapplikasjonen og MariaDB.
 
 Database og opplastede filer lagres i Docker-volumer, slik at data kan bevares mellom containeroppstarter.
+
+
+## Prosjektstruktur
+
+| Mappe | Innhold |
+|---|---|
+| `Controllers/` | MVC-controllere som tar imot forespørsler og returnerer views |
+| `Models/` | Domenemodeller som mappes til databasen |
+| `ViewModels/` | Modeller tilpasset det som vises i views |
+| `Views/` | Razor-views (.cshtml) |
+| `ViewComponents/` | Gjenbrukbare komponenter i brukergrensesnittet |
+| `Services/` | Forretningslogikk, skilt ut fra controllerne |
+| `Data/` | `DbContext` og databaseoppsett (Entity Framework Core) |
+| `Migrations/` | EF Core-migrasjoner for databaseskjemaet |
+| `wwwroot/` | Statiske filer: CSS, JavaScript og bilder |
+| `FeedbackMap.Tests/` | Enhetstester med xUnit |
