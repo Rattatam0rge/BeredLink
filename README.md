@@ -1,5 +1,3 @@
-## Project Contributor
-- Reb-arch – Prosjekt dokumentasjon og testing
 
 # BeredLink – Kriseberedskap, ressurs- og behovsportal
 
