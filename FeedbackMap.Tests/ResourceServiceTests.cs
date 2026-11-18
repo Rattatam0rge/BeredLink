@@ -170,7 +170,11 @@ public class ResourceServiceTests
 
         Assert.Equal(newFile, f.Db.Resources.Single().ImageFileName);
         Assert.Null(f.Images.Open(oldFile));
-        Assert.NotNull(f.Images.Open(newFile));
+
+        using (var imageStream = f.Images.Open(newFile))
+        {
+            Assert.NotNull(imageStream);
+        }
     }
 
     [Fact]
