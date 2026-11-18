@@ -14,5 +14,8 @@
     </PackageReference>
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.*" />
   </ItemGroup>
+<ItemGroup>
+    <Compile Remove="FeedbackMap.Tests/**/*.cs" />
+</ItemGroup>
 
 </Project>
